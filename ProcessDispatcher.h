@@ -3,12 +3,13 @@
 
 
 #include <string>
-#include <string.h>
 #include <iostream>
 #include <vector>
 #include <signal.h>
+#include <cstring>
 #include <dirent.h>
 #include <sys/types.h>
+#include <fstream>
 
 #include "Types.h"
 
@@ -20,10 +21,13 @@ private:
 
     static const std::string PROC_DIR;
     static const std::string PROC_STAT_FILE;
+    static const std::string PROC_STATUS_FILE;
 
 public:
     static ProcessList getListOfProcesses();
+
     static Process getProcessInfo(const int PID);
+    static std::string getProcessName(const int PID);
     static bool isProcessExists(const int PID);
     static bool killProcess(const int PID);
 };

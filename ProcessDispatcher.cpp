@@ -1,7 +1,8 @@
 #include "ProcessDispatcher.h"
 
 const std::string ProcessDispatcher::PROC_DIR = "/proc";
-const std::string ProcessDispatcher::PROC_STAT_FILE = "/status";
+const std::string ProcessDispatcher::PROC_STAT_FILE = "/stat";
+const std::string ProcessDispatcher::PROC_STATUS_FILE = "/status";
 
 
 bool ProcessDispatcher::_charStartsWith(const char *a, const char *b) {
@@ -34,20 +35,22 @@ bool ProcessDispatcher::isProcessExists(const int PID) {
 }
 
 
-ProcessList ProcessDispatcher::getListOfProcesses()  {
+ProcessList ProcessDispatcher::getListOfProcesses() {
     ProcessList listOfProcesses;
 
     struct dirent *entry;
     DIR *dir = opendir(PROC_DIR.c_str());
 
-    if (dir == NULL)
+    if (dir == NULL) {
         throw std::runtime_error("Cannot get process list");
+    }
 
-    while ((entry = readdir(dir)) != NULL)
-    {
+    while ((entry = readdir(dir)) != NULL) {
         int PID = atoi(entry->d_name);
-        if (PID != 0)
-            listOfProcesses.push_back(getProcessInfo(PID));
+        if (PID != 0) {
+            Process processInfo = getProcessInfo(PID);
+            listOfProcesses.push_back(processInfo);
+        }
     }
 
     closedir(dir);
@@ -57,26 +60,57 @@ ProcessList ProcessDispatcher::getListOfProcesses()  {
 
 Process ProcessDispatcher::getProcessInfo(const int PID) {
     const int BUFFER_SIZE = 1000;
-    char buffer[BUFFER_SIZE];
     ssize_t read;
 
     const std::string filePath = PROC_DIR + "/" + std::to_string(PID) + PROC_STAT_FILE;
-    Process proccess;
+    Process process;
 
+    std::ifstream procStatFile(filePath);
+
+    if (!procStatFile.is_open())
+        throw std::runtime_error("Process doesn't exist");
+
+    std::string content( (std::istreambuf_iterator<char>(procStatFile) ),
+                         (std::istreambuf_iterator<char>()) );
+    std::string delimiter = " ";
+
+    size_t pos;
+    std::vector<std::string> tokens {};
+
+    while ((pos = content.find(delimiter)) != std::string::npos) {
+        tokens.push_back(content.substr(0, pos));
+        content.erase(0, pos + delimiter.length());
+    }
+
+    process.PID = PID;
+    process.name = ProcessDispatcher::getProcessName(process.PID);
+    process.cpuUsage = 0;
+
+    return process;
+}
+
+
+std::string ProcessDispatcher::getProcessName(const int PID)
+{
+    const int BUFFER_SIZE = 1000;
+    char buffer[BUFFER_SIZE];
+    ssize_t read;
+
+    const std::string filePath = PROC_DIR + "/" + std::to_string(PID) + PROC_STATUS_FILE;
     FILE *procStatFile = fopen(filePath.c_str(), "r");
 
     if (procStatFile == nullptr)
         throw std::runtime_error("Process doesn't exist");
 
-    proccess.PID = PID;
     while(fgets(buffer, BUFFER_SIZE, procStatFile)) {
         if (_charStartsWith(buffer, "Name"))
-            proccess.name = _parseProcessFileLine(buffer);
+        {
+            fclose(procStatFile);
+            return _parseProcessFileLine(buffer);
+        }
     }
 
-    fclose(procStatFile);
-
-    return proccess;
+    return "None";
 }
 
 

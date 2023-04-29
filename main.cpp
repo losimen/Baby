@@ -1,12 +1,7 @@
 #include <iostream>
 #include <sys/sysctl.h>
-#include <cstring>
 #include <libproc.h>
-#include <mach/task_info.h>
-#include <mach/task.h>
-#include <mach/mach_init.h>
-#include <chrono>
-#include <thread>
+#include <mach/mach_host.h>
 
 
 int main() {
@@ -19,7 +14,7 @@ int main() {
     size_t numBytes;
     sysctl(mib, 4, NULL, &numBytes, NULL, 0);
 
-    struct kinfo_proc *procList = (struct kinfo_proc*) malloc(numBytes);
+    auto *procList = (struct kinfo_proc*) malloc(numBytes);
     sysctl(mib, 4, procList, &numBytes, NULL, 0);
 
     int numProcs = numBytes / sizeof(struct kinfo_proc);
@@ -28,29 +23,25 @@ int main() {
     for (int i = 0; i < numProcs; ++i) {
         pid_t pid = procList[i].kp_proc.p_pid;
 
+        struct proc_taskinfo task_info;
+        int task_info_size = sizeof(task_info);
+        if (proc_pidinfo(pid, PROC_PIDTASKINFO, 0, &task_info, task_info_size) <= 0) {
+            continue;
+        }
+
+        host_cpu_load_info_data_t cpu_load;
+        mach_msg_type_number_t cpu_load_size = HOST_CPU_LOAD_INFO_COUNT;
+        if (host_statistics64(mach_host_self(), HOST_CPU_LOAD_INFO, (host_info64_t)&cpu_load, &cpu_load_size) != KERN_SUCCESS) {
+            continue;
+        }
         std::cout << "Process name: " << procList[i].kp_proc.p_comm << std::endl;
         std::cout << "Process ID: " << pid << std::endl;
 
+        uint64_t total_ticks = cpu_load.cpu_ticks[CPU_STATE_USER] + cpu_load.cpu_ticks[CPU_STATE_SYSTEM] + cpu_load.cpu_ticks[CPU_STATE_NICE] + cpu_load.cpu_ticks[CPU_STATE_IDLE];
 
-        auto get_cpu_time = [](){
-            auto start = std::chrono::high_resolution_clock::now();
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            auto end = std::chrono::high_resolution_clock::now();
+        double cpu_usage = (((double)task_info.pti_total_user + (double)task_info.pti_total_system) / total_ticks) / 100;
 
-            std::chrono::duration<double> elapsed = end - start;
-            return elapsed.count();
-        };
-
-        rusage usage;
-        std::cout << "elsf" << RUSAGE_SELF << std::endl;
-        getrusage(RUSAGE_SELF, &usage);
-
-        double user_time = (double)usage.ru_utime.tv_sec + (double)usage.ru_utime.tv_usec / 1000000;
-        double sys_time = (double)usage.ru_stime.tv_sec + (double)usage.ru_stime.tv_usec / 1000000;
-        double total_time = user_time + sys_time;
-
-        double cpu_usage = total_time * 100 / get_cpu_time();
-        std::cout << "CPU usage: " << cpu_usage << "%\n";
+        std::cout << "Process " << pid << " CPU usage: " << cpu_usage << "%" << std::endl << std::endl;
     }
 
     return 0;

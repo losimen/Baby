@@ -5,6 +5,9 @@
 #include <mach/task_info.h>
 #include <mach/task.h>
 #include <mach/mach_init.h>
+#include <chrono>
+#include <thread>
+
 
 int main() {
     int mib[4];
@@ -22,29 +25,32 @@ int main() {
     int numProcs = numBytes / sizeof(struct kinfo_proc);
     std::cout << "Number of processes: " << numProcs << std::endl;
 
-    mach_port_t machPort = mach_host_self();
-    natural_t processorCount;
-    processor_info_array_t processorInfo;
-    mach_msg_type_number_t processorInfoCount;
-
-    task_info_data_t taskInfo;
-    mach_msg_type_number_t taskInfoCount = TASK_INFO_MAX;
-
     for (int i = 0; i < numProcs; ++i) {
-        std::cout << "Process name: " << procList[i].kp_proc.p_comm << std::endl;
-        std::cout << "Process ID: " << procList[i].kp_proc.p_pid << std::endl;
-
         pid_t pid = procList[i].kp_proc.p_pid;
-        int ret = task_info(mach_task_self(), TASK_BASIC_INFO, (task_info_t)&taskInfo, &taskInfoCount);
-        if (ret != KERN_SUCCESS) {
-            std::cerr << "Failed to get basic task info for process " << pid << std::endl;
-            break;
-        }
 
-        double cpuUsage = ((double)taskInfo[0] / (double)TH_USAGE_SCALE) * 100.0;
-        std::cout << "CPU usage: " << cpuUsage << "%" << std::endl;
+        std::cout << "Process name: " << procList[i].kp_proc.p_comm << std::endl;
+        std::cout << "Process ID: " << pid << std::endl;
 
-        std::cout << std::endl;
+
+        auto get_cpu_time = [](){
+            auto start = std::chrono::high_resolution_clock::now();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            auto end = std::chrono::high_resolution_clock::now();
+
+            std::chrono::duration<double> elapsed = end - start;
+            return elapsed.count();
+        };
+
+        rusage usage;
+        std::cout << "elsf" << RUSAGE_SELF << std::endl;
+        getrusage(RUSAGE_SELF, &usage);
+
+        double user_time = (double)usage.ru_utime.tv_sec + (double)usage.ru_utime.tv_usec / 1000000;
+        double sys_time = (double)usage.ru_stime.tv_sec + (double)usage.ru_stime.tv_usec / 1000000;
+        double total_time = user_time + sys_time;
+
+        double cpu_usage = total_time * 100 / get_cpu_time();
+        std::cout << "CPU usage: " << cpu_usage << "%\n";
     }
 
     return 0;

@@ -11,7 +11,7 @@
 struct Process {
     int PID;
     std::string name;
-    int cpuUsage;
+    double cpuUsage;
 };
 
 typedef std::vector<Process> ProcessList;

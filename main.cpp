@@ -1,4 +1,3 @@
-//Last modified: 18/11/12 19:13:35(CET) by Fabian Holler
 #include <stdlib.h>
 #include <sys/types.h>
 #include <stdio.h>
@@ -6,10 +5,12 @@
 #include <unistd.h>
 #include <thread>
 #include <chrono>
+#include <map>
+#include <tuple>
 
 #include "ProcessDispatcher.h"
 
-struct pstat {
+struct ProcessStat {
     long unsigned int utime_ticks;
     long int cutime_ticks;
     long unsigned int stime_ticks;
@@ -21,10 +22,10 @@ struct pstat {
 };
 
 /*
- * read /proc data into the passed struct pstat
+ * read /proc data into the passed struct ProcessStat
  * returns 0 on success, -1 on error
 */
-int get_usage(const pid_t pid, struct pstat* result) {
+int get_usage(const pid_t pid, struct ProcessStat* result) {
     //convert  pid to string
     char pid_s[20];
     snprintf(pid_s, sizeof(pid_s), "%d", pid);
@@ -40,7 +41,7 @@ int get_usage(const pid_t pid, struct pstat* result) {
     }
 
     //read values from /proc/pid/stat
-    bzero(result, sizeof(struct pstat));
+    bzero(result, sizeof(struct ProcessStat));
     long int rss_pages;
     if (fscanf(fpstat, "%*d %*s %*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %lu"
                        "%lu %ld %ld %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %*lu %lu",
@@ -81,18 +82,18 @@ int get_usage(const pid_t pid, struct pstat* result) {
 /*
 * calculates the elapsed CPU usage between 2 measuring points. in percent
 */
-void calc_cpu_usage_pct(const struct pstat* cur_usage,
-                        const struct pstat* last_usage,
+void calc_cpu_usage_pct(const struct ProcessStat* cur_usage,
+                        const struct ProcessStat* last_usage,
                         double* ucpu_usage, double* scpu_usage)
 {
     const long unsigned int total_time_diff = cur_usage->cpu_total_time -
                                               last_usage->cpu_total_time;
 
-    *ucpu_usage = 100 * (((cur_usage->utime_ticks + cur_usage->cutime_ticks)
+    *ucpu_usage = 100.f * ((double)((cur_usage->utime_ticks + cur_usage->cutime_ticks)
                           - (last_usage->utime_ticks + last_usage->cutime_ticks))
                          / (double) total_time_diff);
 
-    *scpu_usage = 100 * ((((cur_usage->stime_ticks + cur_usage->cstime_ticks)
+    *scpu_usage = 100.f * ((double)(((cur_usage->stime_ticks + cur_usage->cstime_ticks)
                            - (last_usage->stime_ticks + last_usage->cstime_ticks))) /
                          (double) total_time_diff);
 }
@@ -102,25 +103,44 @@ int main()
     ProcessDispatcher processDispatcher;
     auto listOf = ProcessDispatcher::getListOfProcesses();
 
+    std::vector<std::tuple<Process, ProcessStat>> usageStat;
+
     for (auto &process: listOf)
     {
-        pstat startUsage;
-        pstat endUsage;
+        ProcessStat usage {};
+
+        get_usage(process.PID, &usage);
+        usageStat.emplace_back(process, usage);
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+    std::vector<Process> newProcessList;
+
+    for (auto &stat: usageStat)
+    {
+        auto process = std::get<0>(stat);
+        auto pStat = std::get<1>(stat);
+
+        ProcessStat currentUsage {};
+        get_usage(process.PID, &currentUsage);
 
         double ucpu, scpu;
 
-        if (process.PID != 4420)
-        {
-            continue;
-        }
-        get_usage(process.PID, &startUsage);
-        std::this_thread::sleep_for(std::chrono::milliseconds(7));
-        get_usage(process.PID, &endUsage);
+        calc_cpu_usage_pct(&currentUsage, &pStat, &ucpu, &scpu);
+        process.cpuUsage = std::max(ucpu, scpu);
 
-        calc_cpu_usage_pct(&endUsage, &startUsage, &ucpu, &scpu);
-        std::cout << process.PID << " " << process.name << " | " << ucpu << " " << scpu << std::endl;
+        newProcessList.emplace_back(process);
     }
-//    get_usage();
+
+    std::sort(newProcessList.begin(), newProcessList.end(), [](const Process &a, const Process &b){
+        return a.cpuUsage > b.cpuUsage;
+    });
+
+    for (auto &process: newProcessList)
+    {
+        std::cout << process.PID << "| " << process.name << "| " << process.cpuUsage << "%" << std::endl;
+    }
 
     return 0;
 }

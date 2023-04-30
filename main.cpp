@@ -1,12 +1,10 @@
-#include <stdlib.h>
-#include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <thread>
 #include <chrono>
-#include <map>
 #include <tuple>
+#include <sstream>
 
 #include "ProcessDispatcher.h"
 
@@ -181,12 +179,27 @@ int main()
     using std::cout;
     using std::endl;
 
-    double vm, rss;
+    // Get total physical memory size (in KB) from /proc/meminfo
+    std::ifstream meminfo("/proc/meminfo");
+    std::string line;
+    int total_mem_kb = 0;
+    while (std::getline(meminfo, line)) {
+        if (line.compare(0, 9, "MemTotal:") == 0) {
+            std::istringstream iss(line.substr(9));
+            iss >> total_mem_kb;
+            break;
+        }
+    }
+    meminfo.close();
+
+    double vm, rss, mem_percent;
     for (const auto &process: ProcessDispatcher::getListOfProcesses())
     {
+        if (process.PID !=  13884 )
+            continue;
+
         process_mem_usage(process.PID, vm, rss);
-        cout << "PID: " << process.PID << " | VM: " << std::fixed << vm << "; RSS: " << rss << "\n";
+        mem_percent = (rss / total_mem_kb) * 10000;
+        cout << "PID: " << process.PID << " | RSS: " << rss << " KB | Memory Usage: " << std::fixed << mem_percent << "%\n";
     }
-
-
 }

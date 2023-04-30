@@ -98,7 +98,8 @@ void calc_cpu_usage_pct(const struct ProcessStat* cur_usage,
                          (double) total_time_diff);
 }
 
-int main()
+
+void calcCpuUsage()
 {
     ProcessDispatcher processDispatcher;
     auto listOf = ProcessDispatcher::getListOfProcesses();
@@ -141,6 +142,51 @@ int main()
     {
         std::cout << process.PID << "| " << process.name << "| " << process.cpuUsage << "%" << std::endl;
     }
+}
 
-    return 0;
+void process_mem_usage(int pId, double& vm_usage, double& resident_set)
+{
+    using std::ios_base;
+    using std::ifstream;
+    using std::string;
+
+    vm_usage     = 0.0;
+    resident_set = 0.0;
+
+    string a("/proc/" + std::to_string(pId) + "/stat");
+    ifstream stat_stream(a,ios_base::in);
+
+    string pid, comm, state, ppid, pgrp, session, tty_nr;
+    string tpgid, flags, minflt, cminflt, majflt, cmajflt;
+    string utime, stime, cutime, cstime, priority, nice;
+    string O, itrealvalue, starttime;
+
+    unsigned long vsize;
+    long rss;
+
+    stat_stream >> pid >> comm >> state >> ppid >> pgrp >> session >> tty_nr
+                >> tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt
+                >> utime >> stime >> cutime >> cstime >> priority >> nice
+                >> O >> itrealvalue >> starttime >> vsize >> rss;
+
+    stat_stream.close();
+
+    long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
+    vm_usage     = (vsize / 1024.0)/100;
+    resident_set = (rss * page_size_kb)/100;
+}
+
+int main()
+{
+    using std::cout;
+    using std::endl;
+
+    double vm, rss;
+    for (const auto &process: ProcessDispatcher::getListOfProcesses())
+    {
+        process_mem_usage(process.PID, vm, rss);
+        cout << "PID: " << process.PID << " | VM: " << std::fixed << vm << "; RSS: " << rss << "\n";
+    }
+
+
 }

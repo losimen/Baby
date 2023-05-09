@@ -1,8 +1,10 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.24)
 project(Baby)
 
 set(CMAKE_CXX_STANDARD 17)
 
-include_directories(.)
+find_package(Curses REQUIRED)
+include_directories(${CURSES_INCLUDE_DIR})
 
 add_executable(Baby main.cpp ProcessDispatcher.cpp)
+target_link_libraries(Baby ${CURSES_LIBRARIES})

@@ -1,7 +1,8 @@
-cmake_minimum_required(VERSION 3.14)
-
-set(CMAKE_CXX_STANDARD 11)
-
+cmake_minimum_required(VERSION 3.25)
 project(Baby)
 
-add_executable(Baby main.cpp)
+set(CMAKE_CXX_STANDARD 17)
+
+include_directories(.)
+
+add_executable(Baby main.cpp ProcessDispatcher.cpp)

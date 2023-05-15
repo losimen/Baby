@@ -8,6 +8,20 @@
 #include <iostream>
 
 
+struct ProcessStat {
+    long unsigned int utime_ticks;
+    long int cutime_ticks;
+    long unsigned int stime_ticks;
+    long int cstime_ticks;
+    long unsigned int vsize; // virtual memory size in bytes
+    long unsigned int rss; //Resident  Set  Size in bytes
+    double cpuUsage;
+
+    long unsigned int cpu_total_time;
+};
+
+
+
 struct Process {
     int PID;
     std::string name;

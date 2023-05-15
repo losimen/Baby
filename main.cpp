@@ -3,104 +3,157 @@
 #include <vector>
 #include <string>
 #include <numeric>
+#include <iostream>
+
+
+struct TableInfo
+{
+    std::string firstName;
+    std::string lastName;
+    int age;
+};
+
+
+class UITable
+{
+private:
+    std::vector<TableInfo> data;
+    WINDOW *window = nullptr;
+    std::vector<std::string> headers = {"First Name", "Last Name", "Age"};
+    std::vector<int> widths = {12, 12, 4};
+
+    void drawTableData()
+    {
+        for (int i = 0; i < data.size(); i++) {
+            int x = 1;
+
+            mvwprintw(window, i + 3, x, data[i].firstName.substr(0, widths[0]).c_str());
+            x += widths[0] + 1;
+
+            mvwprintw(window, i + 3, x, data[i].lastName.substr(0, widths[1]).c_str());
+            x += widths[1] + 2;
+
+            mvwprintw(window, i + 3, x, std::to_string(data[i].age).c_str());
+        }
+    }
+
+    void initHeader()
+    {
+        int x = 1;
+        for (int i = 0; i < headers.size(); i++) {
+            mvwprintw(window, 1, x, headers[i].c_str());
+            x += widths[i] + 1;
+        }
+
+        mvwhline(window, 2, 1, '-', getmaxx(window) - 2);
+    }
+
+    void sortData(int col, bool sortDirection)
+    {
+        std::sort(data.begin(), data.end(), [&](const TableInfo& a, const TableInfo& b) {
+            bool condition = false;
+
+            if (col == 0)
+            {
+                condition = sortDirection ? (a.firstName > b.firstName) : (a.firstName < b.firstName);
+            }
+            else if (col == 1)
+            {
+                condition = sortDirection ? (a.lastName > b.lastName) : (a.lastName < b.lastName);
+            }
+            else if (col == 2)
+            {
+                condition = sortDirection ? (a.age > b.age) : (a.age < b.age);
+            }
+
+            return condition;
+        });
+    }
+
+
+    void redrawHeader(int col)
+    {
+        int x = 1;
+        for (int i = 0; i < headers.size(); i++) {
+            if (i == col)
+            {
+                wattron(window, A_REVERSE);
+            }
+
+            mvwprintw(window, 1, x, headers[i].c_str());
+            wattroff(window, A_REVERSE);
+            x += widths[i] + 1;
+        }
+
+        // redraw the horizontal line under the header
+        mvwhline(window, 2, 1, '-', getmaxx(window) - 2);
+    }
+
+public:
+    explicit UITable(const std::vector<TableInfo> &data)
+    {
+        initscr();
+        noecho();
+
+        this->data = data;
+        this->window = newwin((int)data.size() + 3, std::accumulate(widths.begin(), widths.end(), 1) + 1, 1, 1);
+    }
+
+    void drawTable()
+    {
+        this->initHeader();
+        this->drawTableData();
+
+        refresh();
+        wrefresh(window);
+    }
+
+    void waitForInput()
+    {
+        std::vector<bool> sortDirections(headers.size(), false);
+        int ch;
+
+        while ((ch = getch()) != 'q')
+        {
+            if (ch >= '1' && ch <= '0' + headers.size())
+            {
+                int col = ch - '1';
+                this->sortData(col, sortDirections[col-1]);
+
+                sortDirections[col-1] = !sortDirections[col-1];
+
+                this->drawTableData();
+                this->redrawHeader(col);
+
+                wrefresh(window);
+            }
+        }
+    }
+
+    ~UITable()
+    {
+        endwin();
+        delwin(window);
+    }
+};
 
 
 int main() {
-    // initialize ncurses
-    initscr();
-
-    // create some sample data
-    std::vector<std::vector<std::string>> data = {
-            {"John", "Doe", "40"},
-            {"Jane", "Doe", "35"},
-            {"Bob", "Smith", "55"},
-            {"Alice", "Jones", "25"}
+    std::vector<TableInfo> tableData = {
+        {"Abc", "Doe", 40},
+        {"Bac", "Doe", 35},
+        {"Cba", "Smith", 55},
+        {"Bac", "Smith", 60},
+        {"Abc", "Smith", 50},
+        {"Cba", "Doe", 45},
+        {"Abc", "Jones", 30},
+        {"Bac", "Jones", 25},
+        {"Cba", "Jones", 20},
     };
 
-    // create a vector of column names
-    std::vector<std::string> headers = {"First Name", "Last Name", "Age"};
-
-    // create a vector of column widths
-    std::vector<int> widths = {12, 12, 4};
-
-    // create a vector of column sort directions
-    std::vector<bool> sort_directions(headers.size(), false);
-
-    // create a window to display the table
-    WINDOW* window = newwin(data.size() + 2, std::accumulate(widths.begin(), widths.end(), 1) + 1, 1, 1);
-
-    // draw the table header
-    int x = 1;
-    for (int i = 0; i < headers.size(); i++) {
-        mvwprintw(window, 1, x, headers[i].c_str());
-        x += widths[i] + 1;
-    }
-
-    // draw a horizontal line under the header
-    mvwhline(window, 2, 1, '-', getmaxx(window) - 2);
-
-    // draw the table data
-    for (int i = 0; i < data.size(); i++) {
-        x = 1;
-        for (int j = 0; j < data[i].size(); j++) {
-            mvwprintw(window, i + 3, x, data[i][j].c_str());
-            x += widths[j] + 1;
-        }
-    }
-
-    // refresh the screen to display the window and its contents
-    refresh();
-    wrefresh(window);
-
-    // wait for a key press
-    int ch;
-    while ((ch = getch()) != 'q') {
-        // if a key other than 'q' is pressed, check if it corresponds to a column header
-        if (ch >= '1' && ch <= '0' + headers.size()) {
-            // convert the key to a column index
-            int col = ch - '1';
-
-            // sort the data by the selected column
-            std::sort(data.begin(), data.end(), [&](const std::vector<std::string>& a, const std::vector<std::string>& b) {
-                if (sort_directions[col]) {
-                    return a[col] < b[col];
-                } else {
-                    return a[col] > b[col];
-                }
-            });
-
-            // flip the sort direction for the selected column
-            sort_directions[col] = !sort_directions[col];
-
-            // redraw the table data
-            for (int i = 0; i < data.size(); i++) {
-                x = 1;
-                for (int j = 0; j < data[i].size(); j++) {
-                    mvwprintw(window, i + 3, x, data[i][j].c_str());
-                    x += widths[j] + 1;
-                }
-            }
-            // highlight the selected column header to indicate the sort direction
-            x = 1;
-            for (int i = 0; i < headers.size(); i++) {
-                if (i == col) {
-                    wattron(window, A_REVERSE);
-                }
-                mvwprintw(window, 1, x, headers[i].c_str());
-                wattroff(window, A_REVERSE);
-                x += widths[i] + 1;
-            }
-
-            // redraw the horizontal line under the header
-            mvwhline(window, 2, 1, '-', getmaxx(window) - 2);
-
-            // refresh the screen to display the updated window and its contents
-            wrefresh(window);
-        }
-
-    }
-
-    endwin();
+    UITable table(tableData);
+    table.drawTable();
+    table.waitForInput();
 
     return 0;
 }

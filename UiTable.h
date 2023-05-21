@@ -12,7 +12,7 @@
 #include <numeric>
 #include <iostream>
 
-#include "TableInfo.h"
+#include "Types.h"
 
 
 class UITable

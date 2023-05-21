@@ -18,6 +18,13 @@ struct Process {
     double memUsage;
 };
 
+struct TableInfo
+{
+    std::string firstName;
+    std::string lastName;
+    int age;
+};
+
 struct ProcessStat {
     int PID;
 

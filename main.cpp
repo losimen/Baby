@@ -8,17 +8,6 @@
 
 #include "ProcessDispatcher.h"
 
-struct ProcessStat {
-    long unsigned int utime_ticks;
-    long int cutime_ticks;
-    long unsigned int stime_ticks;
-    long int cstime_ticks;
-    long unsigned int vsize; // virtual memory size in bytes
-    long unsigned int rss; //Resident  Set  Size in bytes
-
-    long unsigned int cpu_total_time;
-};
-
 /*
  * read /proc data into the passed struct ProcessStat
  * returns 0 on success, -1 on error
@@ -73,6 +62,8 @@ int get_usage(const pid_t pid, struct ProcessStat* result) {
     for(unsigned long i : cpu_time)
         result->cpu_total_time += i;
 
+    result->PID = pid;
+
     return 0;
 }
 
@@ -114,7 +105,7 @@ void calcCpuUsage()
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-    std::vector<Process> newProcessList;
+    ProcessList newProcessList;
 
     for (auto &stat: usageStat)
     {
@@ -131,18 +122,9 @@ void calcCpuUsage()
 
         newProcessList.emplace_back(process);
     }
-
-    std::sort(newProcessList.begin(), newProcessList.end(), [](const Process &a, const Process &b){
-        return a.cpuUsage > b.cpuUsage;
-    });
-
-    for (auto &process: newProcessList)
-    {
-        std::cout << process.PID << "| " << process.name << "| " << process.cpuUsage << "%" << std::endl;
-    }
 }
 
-void process_mem_usage(int pId, double& vm_usage, double& resident_set)
+void processMemUsage(int pId, double& vm_usage, double& resident_set)
 {
     using std::ios_base;
     using std::ifstream;
@@ -174,32 +156,47 @@ void process_mem_usage(int pId, double& vm_usage, double& resident_set)
     resident_set = (float)(rss * page_size_kb)/100;
 }
 
-int main()
+int getTotalMemKb()
 {
-    using std::cout;
-    using std::endl;
-
     // Get total physical memory size (in KB) from /proc/meminfo
     std::ifstream meminfo("/proc/meminfo");
     std::string line;
-    int total_mem_kb = 0;
+    int totalMemKb = 0;
     while (std::getline(meminfo, line)) {
         if (line.compare(0, 9, "MemTotal:") == 0) {
             std::istringstream iss(line.substr(9));
-            iss >> total_mem_kb;
+            iss >> totalMemKb;
             break;
         }
     }
     meminfo.close();
 
-    double vm, rss, mem_percent;
-    for (const auto &process: ProcessDispatcher::getListOfProcesses())
-    {
-        if (process.PID !=  13884 )
-            continue;
+    return totalMemKb;
+}
 
-        process_mem_usage(process.PID, vm, rss);
-        mem_percent = (rss / total_mem_kb) * 10000;
-        cout << "PID: " << process.PID << " | RSS: " << rss << " KB | Memory Usage: " << std::fixed << mem_percent << "%\n";
+int main()
+{
+    using std::cout;
+    using std::endl;
+
+    int totalMemKb = getTotalMemKb();
+    auto listOf = ProcessDispatcher::getListOfProcesses();
+
+    for (auto &process: listOf)
+    {
+        double vm, rss;
+
+        processMemUsage(process.PID, vm, rss);
+
+        process.vSize = vm;
+        process.rss = rss;
+        process.memUsage = (rss / totalMemKb) * 10000;
     }
+
+    for (const auto &process: listOf)
+    {
+        cout << process.PID << "| " << process.name << "| " << std::fixed << process.memUsage << "%" << std::endl;
+    }
+
+    return 0;
 }

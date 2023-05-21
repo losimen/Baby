@@ -19,11 +19,12 @@ class UITable
 {
 private:
     ProcessList data;
+    bool headerDrawn = false;
     WINDOW *window = nullptr;
     std::vector<std::string> headers = {"PID", "Name", "CPU %", "Mem %"};
     std::vector<int> widths = {5, 15, 10, 7};
 
-    void drawTableData();
+    void drawTableData(int &startRow, int &numRows);
 
     void initHeader();
     void redrawHeader(int col);

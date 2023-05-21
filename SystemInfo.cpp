@@ -5,12 +5,12 @@ const std::string SystemInfo::PROC_STAT_FILE = "/stat";
 const std::string SystemInfo::PROC_STATUS_FILE = "/status";
 
 
-bool SystemInfo::_charStartsWith(const char *a, const char *b) {
+bool SystemInfo::charStartsWith(const char *a, const char *b) {
     return strncmp(a, b, strlen(b)) == 0;
 }
 
 
-std::string SystemInfo::_parseProcessFileLine(std::string lineToParse) {
+std::string SystemInfo::parseProcessFileLine(std::string lineToParse) {
     std::string result;
     lineToParse = lineToParse.substr(lineToParse.rfind(':')+1);
 
@@ -100,10 +100,10 @@ std::string SystemInfo::getProcessName(const int PID)
         throw std::runtime_error("Process doesn't exist");
 
     while(fgets(buffer, BUFFER_SIZE, procStatFile)) {
-        if (_charStartsWith(buffer, "Name"))
+        if (charStartsWith(buffer, "Name"))
         {
             fclose(procStatFile);
-            return _parseProcessFileLine(buffer);
+            return parseProcessFileLine(buffer);
         }
     }
 

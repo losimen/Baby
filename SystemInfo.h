@@ -24,8 +24,8 @@ class SystemInfo {
 private:
     ProcessList processList;
 
-    static bool _charStartsWith(const char *a, const char *b);
-    static std::string _parseProcessFileLine(std::string lineToParse);
+    static bool charStartsWith(const char *a, const char *b);
+    static std::string parseProcessFileLine(std::string lineToParse);
 
     int getUsage(const pid_t pid, struct ProcessStat* result);
     void calcCpuUsagePct(const struct ProcessStat* cur_usage,

@@ -66,8 +66,42 @@ std::string UITable::addLeadingZeros(const std::string& str, size_t n) {
 
 
 void UITable::sortData(int col, bool sortDirection) {
-    // Implement your sorting logic here based on the specified column and sort direction
-    // Update the `data` vector accordingly
+    if (col == 1)
+    {
+        std::sort(data.begin(), data.end(), [sortDirection](const Process& a, const Process& b) {
+            if (sortDirection)
+                return a.PID < b.PID;
+            else
+                return a.PID > b.PID;
+        });
+    }
+    else if (col == 2)
+    {
+        std::sort(data.begin(), data.end(), [sortDirection](const Process& a, const Process& b) {
+            if (sortDirection)
+                return a.name < b.name;
+            else
+                return a.name > b.name;
+        });
+    }
+    else if (col == 3)
+    {
+        std::sort(data.begin(), data.end(), [sortDirection](const Process& a, const Process& b) {
+            if (sortDirection)
+                return a.cpuUsage < b.cpuUsage;
+            else
+                return a.cpuUsage > b.cpuUsage;
+        });
+    }
+    else if (col == 4)
+    {
+        std::sort(data.begin(), data.end(), [sortDirection](const Process& a, const Process& b) {
+            if (sortDirection)
+                return a.memUsage < b.memUsage;
+            else
+                return a.memUsage > b.memUsage;
+        });
+    }
 }
 
 void UITable::drawHeader(int col) {
@@ -113,16 +147,28 @@ void UITable::waitForInput() {
     int ch;
 
     while ((ch = getch()) != 'q') {
-        if (ch == 'u') {
-            currentRow--;
-            this->drawTableData();
+        int col = ch - '0';
+        if (col >= 1 && col < 9)
+        {
+            sortDirections[col] = !sortDirections[col];
+            this->sortData(col, sortDirections[col]);
+            startOffset = 0;
+            currentRow = 0;
         }
-        else if (ch == 'd') {
-            currentRow++;
-            this->drawTableData();
-        }
-        this->drawHeader(-1);
 
+        if (ch == 'u')
+        {
+            currentRow--;
+            col = -1;
+        }
+        else if (ch == 'd')
+        {
+            currentRow++;
+            col = -1;
+        }
+
+        this->drawTableData();
+        this->drawHeader(col-1);
 
         wrefresh(window);
     }

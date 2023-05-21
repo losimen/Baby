@@ -22,9 +22,11 @@ private:
     bool headerDrawn = false;
     WINDOW *window = nullptr;
     std::vector<std::string> headers = {"PID", "Name", "CPU %", "Mem %"};
-    std::vector<int> widths = {5, 15, 10, 7};
+    std::vector<int> widths = {10, 15, 10, 7};
 
-    void drawTableData(int &startRow, int &numRows);
+    std::string addLeadingZeros(std::string str, size_t n);
+
+    void drawTableData(int &startOffset);
 
     void initHeader();
     void redrawHeader(int col);

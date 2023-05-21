@@ -4,42 +4,46 @@
 
 #include "UiTable.h"
 
-void UITable::drawTableData(int &startRow, int &numRows) {
-    int maxRows = getmaxy(window) - 3; // Calculate the maximum number of visible rows
+void UITable::drawTableData(int &startOffset) {
+    int maxRows = LINES - 3;
+//    std::cout << "maxRows = " << maxRows << std::endl;
     int dataSize = data.size();
-    int endRow = startRow + numRows - 1;
+    int endRow = startOffset + maxRows - 1;
 
-    // Adjust the start and end row based on the available data and visible rows
-    if (startRow < 0) {
-        startRow = 0;
+    // Validate the startRow and numRows
+    if (startOffset < 0) {
+        startOffset = 0;
     }
-    if (endRow >= dataSize) {
-        endRow = dataSize - 1;
-    }
-    if (endRow >= startRow + maxRows) {
-        startRow = endRow - maxRows + 1;
+    // validate for max value
+    if (endRow > dataSize) {
+        startOffset = dataSize - maxRows + 1;
     }
 
-    numRows = endRow - startRow + 1;
-
-    for (int i = startRow; i <= endRow; i++) {
+    for (int i = startOffset; i <= endRow; i++) {
         // Check if the current index is valid
         if (i >= 0 && i < dataSize) {
             int x = 1;
 
-            mvwprintw(window, i - startRow + 3, x, "%s", std::to_string(data[i].PID).c_str());
+            mvwprintw(window, i - startOffset + 3, x, "%s", addLeadingZeros(std::to_string(data[i].PID), 5).c_str());
             x += widths[0];
 
-            mvwprintw(window, i - startRow + 3, x, "%s", data[i].name.substr(0, widths[1]).c_str());
+            mvwprintw(window, i - startOffset + 3, x, "%s", data[i].name.substr(0, widths[1]).c_str());
             x += widths[1];
 
-            mvwprintw(window, i - startRow + 3, x, "%s", std::to_string(data[i].cpuUsage).c_str());
+            mvwprintw(window, i - startOffset + 3, x, "%s", std::to_string(data[i].cpuUsage).c_str());
             x += widths[2];
 
-            mvwprintw(window, i - startRow + 3, x, "%s", std::to_string(data[i].memUsage).c_str());
+            mvwprintw(window, i - startOffset + 3, x, "%s", std::to_string(data[i].memUsage).c_str());
         }
     }
 }
+
+
+std::string UITable::addLeadingZeros(std::string str, size_t n) {
+    int precision = n - std::min(n, str.size());
+    return std::string(precision, '0').append(str);
+}
+
 
 void UITable::initHeader() {
     // Check if the header has already been drawn
@@ -82,12 +86,12 @@ void UITable::redrawHeader(int col) {
 
 UITable::UITable(const ProcessList &data) {
     initscr();
+    mousemask(ALL_MOUSE_EVENTS, nullptr);
     noecho();
-    scrollok(stdscr, TRUE); // Enable scrolling for the standard screen
+    keypad(window, TRUE);
 
     this->data = data;
     this->window = newwin((int)data.size() + 3, std::accumulate(widths.begin(), widths.end(), 1) + 1, 1, 1);
-    scrollok(window, TRUE); // Enable scrolling for the table window
 
     this->initHeader(); // Initialize the header only once in the constructor
 }
@@ -95,8 +99,7 @@ UITable::UITable(const ProcessList &data) {
 void UITable::drawTable() {
     this->initHeader();
     int a = 0;
-    int size = data.size();
-    this->drawTableData(a, size);
+    this->drawTableData(a);
 
     refresh();
     wrefresh(window);
@@ -106,21 +109,16 @@ void UITable::waitForInput() {
     std::vector<bool> sortDirections(headers.size(), false);
     int ch;
     int startRow = 0;
-    int numRows = data.size(); // Calculate the number of visible rows
 
     while ((ch = getch()) != 'q') {
-        if (ch == KEY_UP) {
+        if (ch == 'u') {
             startRow--;
-        } else if (ch == KEY_DOWN) {
-            startRow++;
-        } else if (ch >= '1' && ch <= '0' + headers.size()) {
-            int col = ch - '1';
-            this->sortData(col, sortDirections[col-1]);
-            sortDirections[col-1] = !sortDirections[col-1];
-            startRow = 0; // Reset the start row when sorting to show the sorted data from the beginning
+            this->drawTableData(startRow);
         }
-
-        this->drawTableData(startRow, numRows);
+        if (ch == 'd') {
+            startRow++;
+            this->drawTableData(startRow);
+        }
 //        this->redrawHeader(-1); // Redraw the header without highlighting any column
 
         wrefresh(window);

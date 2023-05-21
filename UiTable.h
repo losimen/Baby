@@ -19,17 +19,17 @@ class UITable
 {
 private:
     ProcessList data;
-    bool headerDrawn = false;
+    int startOffset = 0;
+
     WINDOW *window = nullptr;
     std::vector<std::string> headers = {"PID", "Name", "CPU %", "Mem %"};
     std::vector<int> widths = {10, 15, 10, 7};
 
     std::string addLeadingZeros(std::string str, size_t n);
 
-    void drawTableData(int &startOffset);
+    void drawTableData();
 
-    void initHeader();
-    void redrawHeader(int col);
+    void drawHeader(int col);
 
     void sortData(int col, bool sortDirection);
 public:

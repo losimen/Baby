@@ -4,20 +4,16 @@
 
 #include "UiTable.h"
 
-void UITable::drawTableData(int &startOffset) {
+void UITable::drawTableData() {
     int maxRows = LINES - 3;
-//    std::cout << "maxRows = " << maxRows << std::endl;
     int dataSize = data.size();
     int endRow = startOffset + maxRows - 1;
 
-    // Validate the startRow and numRows
-    if (startOffset < 0) {
+    if (startOffset < 0)
         startOffset = 0;
-    }
-    // validate for max value
-    if (endRow > dataSize) {
+
+    if (endRow > dataSize)
         startOffset = dataSize - maxRows + 1;
-    }
 
     for (int i = startOffset; i <= endRow; i++) {
         // Check if the current index is valid
@@ -45,39 +41,22 @@ std::string UITable::addLeadingZeros(std::string str, size_t n) {
 }
 
 
-void UITable::initHeader() {
-    // Check if the header has already been drawn
-    if (headerDrawn) {
-        return;
-    }
-
-    int x = 1;
-    for (int i = 0; i < headers.size(); i++) {
-        mvwprintw(window, 1, x, "%s", headers[i].c_str());
-        x += widths[i];
-    }
-
-    mvwhline(window, 2, 1, '-', getmaxx(window) - 2);
-
-    // Set headerDrawn to true after drawing the header
-    headerDrawn = true;
-}
-
 void UITable::sortData(int col, bool sortDirection) {
     // Implement your sorting logic here based on the specified column and sort direction
     // Update the `data` vector accordingly
 }
 
-void UITable::redrawHeader(int col) {
+void UITable::drawHeader(int col) {
     int x = 1;
     for (int i = 0; i < headers.size(); i++) {
-        if (i == col) {
+        if (i == col)
+        {
             wattron(window, A_REVERSE);
         }
 
         mvwprintw(window, 1, x, "%s", headers[i].c_str());
         wattroff(window, A_REVERSE);
-        x += widths[i] + 1;
+        x += widths[i];
     }
 
     // Redraw the horizontal line under the header
@@ -92,14 +71,11 @@ UITable::UITable(const ProcessList &data) {
 
     this->data = data;
     this->window = newwin((int)data.size() + 3, std::accumulate(widths.begin(), widths.end(), 1) + 1, 1, 1);
-
-    this->initHeader(); // Initialize the header only once in the constructor
 }
 
 void UITable::drawTable() {
-    this->initHeader();
-    int a = 0;
-    this->drawTableData(a);
+    this->drawHeader(-1);
+    this->drawTableData();
 
     refresh();
     wrefresh(window);
@@ -108,18 +84,19 @@ void UITable::drawTable() {
 void UITable::waitForInput() {
     std::vector<bool> sortDirections(headers.size(), false);
     int ch;
-    int startRow = 0;
 
     while ((ch = getch()) != 'q') {
+
         if (ch == 'u') {
-            startRow--;
-            this->drawTableData(startRow);
+            startOffset--;
+            this->drawTableData();
         }
-        if (ch == 'd') {
-            startRow++;
-            this->drawTableData(startRow);
+        else if (ch == 'd') {
+            startOffset++;
+            this->drawTableData();
         }
-//        this->redrawHeader(-1); // Redraw the header without highlighting any column
+        this->drawHeader(-1);
+
 
         wrefresh(window);
     }

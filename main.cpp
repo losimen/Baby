@@ -88,19 +88,19 @@ void calc_cpu_usage_pct(const struct ProcessStat* cur_usage,
 }
 
 
-void calcCpuUsage()
+ProcessList calcCpuUsage()
 {
     ProcessDispatcher processDispatcher;
     auto listOf = ProcessDispatcher::getListOfProcesses();
 
-    std::vector<std::tuple<Process, ProcessStat>> usageStat;
+    std::vector<ProcessStat> usageStat;
 
     for (auto &process: listOf)
     {
         ProcessStat usage {};
 
         get_usage(process.PID, &usage);
-        usageStat.emplace_back(process, usage);
+        usageStat.emplace_back(usage);
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -109,19 +109,19 @@ void calcCpuUsage()
 
     for (auto &stat: usageStat)
     {
-        auto process = std::get<0>(stat);
-        auto pStat = std::get<1>(stat);
-
+        Process process = ProcessDispatcher::getProcessInfo(stat.PID);
         ProcessStat currentUsage {};
-        get_usage(process.PID, &currentUsage);
+        get_usage(stat.PID, &currentUsage);
 
         double ucpu, scpu;
 
-        calc_cpu_usage_pct(&currentUsage, &pStat, &ucpu, &scpu);
+        calc_cpu_usage_pct(&currentUsage, &stat, &ucpu, &scpu);
         process.cpuUsage = std::max(ucpu, scpu);
 
         newProcessList.emplace_back(process);
     }
+
+    return newProcessList;
 }
 
 void processMemUsage(int pId, double& vm_usage, double& resident_set)
@@ -180,7 +180,7 @@ int main()
     using std::endl;
 
     int totalMemKb = getTotalMemKb();
-    auto listOf = ProcessDispatcher::getListOfProcesses();
+    auto listOf = calcCpuUsage();
 
     for (auto &process: listOf)
     {
@@ -193,9 +193,14 @@ int main()
         process.memUsage = (rss / totalMemKb) * 10000;
     }
 
+    // sort by cpu usage
+    std::sort(listOf.begin(), listOf.end(), [](const Process& a, const Process& b) {
+        return a.cpuUsage > b.cpuUsage;
+    });
+
     for (const auto &process: listOf)
     {
-        cout << process.PID << "| " << process.name << "| " << std::fixed << process.memUsage << "%" << std::endl;
+        cout << process.PID << "| " << process.name << "| " << process.cpuUsage << "| " << std::fixed << process.memUsage << "%" << std::endl;
     }
 
     return 0;

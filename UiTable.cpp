@@ -6,26 +6,35 @@
 
 void UITable::drawTableData() {
     int maxRows = LINES - 3;
-    int dataSize = (int)data.size();
+    int dataSize = static_cast<int>(data.size());
     int endRow = startOffset + maxRows - 1;
 
-    if (startOffset < 0)
+    if (startOffset < 0) {
         startOffset = 0;
+        endRow = startOffset + maxRows - 1;
+    }
 
-    if (currentRow < 0)
+    if (currentRow < 0) {
         currentRow = 0;
+    }
 
-    if (endRow > dataSize)
-        startOffset = dataSize - maxRows + 1;
+    if (endRow >= dataSize) {
+        endRow = dataSize - 1;
+        startOffset = endRow - maxRows + 1;
+    }
 
-    if (currentRow < startOffset)
+    if (currentRow < startOffset) {
         startOffset = currentRow;
+        endRow = startOffset + maxRows - 1;
+    }
 
-    if (currentRow > endRow)
-        startOffset = endRow + 1;
+    if (currentRow > endRow) {
+        endRow = currentRow;
+        startOffset = endRow - maxRows + 1;
+    }
 
     for (int i = startOffset; i <= endRow; i++) {
-        wmove(window, i - startOffset + 3, 1); // Move cursor to the beginning of the line
+        wmove(window, i - startOffset + 3, 1);
         wclrtoeol(window);
 
         if (i == currentRow)

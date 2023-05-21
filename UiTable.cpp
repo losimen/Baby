@@ -8,13 +8,16 @@ void UITable::drawTableData() {
     for (int i = 0; i < data.size(); i++) {
         int x = 1;
 
-        mvwprintw(window, i + 3, x, "%s", data[i].firstName.substr(0, widths[0]).c_str());
-        x += widths[0] + 1;
+        mvwprintw(window, i + 3, x, "%s",std::to_string(data[i].PID).c_str());
+        x += widths[0];
 
-        mvwprintw(window, i + 3, x, "%s", data[i].lastName.substr(0, widths[1]).c_str());
-        x += widths[1] + 2;
+        mvwprintw(window, i + 3, x, "%s", data[i].name.substr(0, widths[1]).c_str());
+        x += widths[1];
 
-        mvwprintw(window, i + 3, x, "%s", std::to_string(data[i].age).c_str());
+        mvwprintw(window, i + 3, x, "%s", std::to_string(data[i].cpuUsage).c_str());
+        x += widths[2];
+
+        mvwprintw(window, i + 3, x, "%s", std::to_string(data[i].memUsage).c_str());
     }
 }
 
@@ -22,31 +25,13 @@ void UITable::initHeader() {
     int x = 1;
     for (int i = 0; i < headers.size(); i++) {
         mvwprintw(window, 1, x, "%s", headers[i].c_str());
-        x += widths[i] + 1;
+        x += widths[i];
     }
 
     mvwhline(window, 2, 1, '-', getmaxx(window) - 2);
 }
 
 void UITable::sortData(int col, bool sortDirection) {
-    std::sort(data.begin(), data.end(), [&](const TableInfo& a, const TableInfo& b) {
-        bool condition = false;
-
-        if (col == 0)
-        {
-            condition = sortDirection ? (a.firstName > b.firstName) : (a.firstName < b.firstName);
-        }
-        else if (col == 1)
-        {
-            condition = sortDirection ? (a.lastName > b.lastName) : (a.lastName < b.lastName);
-        }
-        else if (col == 2)
-        {
-            condition = sortDirection ? (a.age > b.age) : (a.age < b.age);
-        }
-
-        return condition;
-    });
 }
 
 void UITable::redrawHeader(int col) {
@@ -66,7 +51,7 @@ void UITable::redrawHeader(int col) {
     mvwhline(window, 2, 1, '-', getmaxx(window) - 2);
 }
 
-UITable::UITable(const std::vector<TableInfo> &data) {
+UITable::UITable(const ProcessList &data) {
     initscr();
     noecho();
 

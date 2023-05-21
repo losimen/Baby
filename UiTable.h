@@ -18,10 +18,10 @@
 class UITable
 {
 private:
-    std::vector<TableInfo> data;
+    ProcessList data;
     WINDOW *window = nullptr;
-    std::vector<std::string> headers = {"First Name", "Last Name", "Age"};
-    std::vector<int> widths = {12, 12, 4};
+    std::vector<std::string> headers = {"PID", "Name", "CPU %", "Mem %"};
+    std::vector<int> widths = {5, 15, 10, 7};
 
     void drawTableData();
 
@@ -30,7 +30,7 @@ private:
 
     void sortData(int col, bool sortDirection);
 public:
-    explicit UITable(const std::vector<TableInfo> &data);
+    explicit UITable(const ProcessList &data);
 
     void drawTable();
     void waitForInput();

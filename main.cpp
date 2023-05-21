@@ -1,5 +1,5 @@
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 #include <unistd.h>
 #include <thread>
 #include <chrono>
@@ -33,7 +33,7 @@ int get_usage(const pid_t pid, struct ProcessStat* result) {
                                     strlen(stat_filepath) -1);
 
     FILE *fpstat = fopen(stat_filepath, "r");
-    if (fpstat == NULL) {
+    if (fpstat == nullptr) {
         perror("FOPEN ERROR ");
         return -1;
     }
@@ -53,7 +53,7 @@ int get_usage(const pid_t pid, struct ProcessStat* result) {
 
     //read+calc cpu total time from /proc/stat
     FILE *fstat = fopen("/proc/stat", "r");
-    if (fstat == NULL) {
+    if (fstat == nullptr) {
         perror("FOPEN ERROR ");
         return -1;
     }
@@ -70,8 +70,8 @@ int get_usage(const pid_t pid, struct ProcessStat* result) {
 
     fclose(fstat);
 
-    for(int i=0; i < 10;i++)
-        result->cpu_total_time += cpu_time[i];
+    for(unsigned long i : cpu_time)
+        result->cpu_total_time += i;
 
     return 0;
 }
@@ -170,8 +170,8 @@ void process_mem_usage(int pId, double& vm_usage, double& resident_set)
     stat_stream.close();
 
     long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
-    vm_usage     = (vsize / 1024.0)/100;
-    resident_set = (rss * page_size_kb)/100;
+    vm_usage     = ((double)vsize / 1024.0)/100;
+    resident_set = (float)(rss * page_size_kb)/100;
 }
 
 int main()

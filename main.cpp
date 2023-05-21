@@ -5,13 +5,11 @@
 #include <chrono>
 #include <tuple>
 #include <sstream>
+#include <algorithm>
 
 #include "ProcessDispatcher.h"
 
-/*
- * read /proc data into the passed struct ProcessStat
- * returns 0 on success, -1 on error
-*/
+
 int get_usage(const pid_t pid, struct ProcessStat* result) {
     //convert  pid to string
     char pid_s[20];
@@ -68,9 +66,6 @@ int get_usage(const pid_t pid, struct ProcessStat* result) {
 }
 
 
-/*
-* calculates the elapsed CPU usage between 2 measuring points. in percent
-*/
 void calc_cpu_usage_pct(const struct ProcessStat* cur_usage,
                         const struct ProcessStat* last_usage,
                         double* ucpu_usage, double* scpu_usage)
@@ -88,14 +83,10 @@ void calc_cpu_usage_pct(const struct ProcessStat* cur_usage,
 }
 
 
-ProcessList calcCpuUsage()
+void calcCpuUsage(ProcessList &processList)
 {
-    ProcessDispatcher processDispatcher;
-    auto listOf = ProcessDispatcher::getListOfProcesses();
-
     std::vector<ProcessStat> usageStat;
-
-    for (auto &process: listOf)
+    for (auto &process: processList)
     {
         ProcessStat usage {};
 
@@ -105,23 +96,21 @@ ProcessList calcCpuUsage()
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-    ProcessList newProcessList;
 
     for (auto &stat: usageStat)
     {
-        Process process = ProcessDispatcher::getProcessInfo(stat.PID);
+        auto process = std::find_if(processList.begin(), processList.end(), [&](const Process &p) {
+            return p.PID == stat.PID;
+        });
+
         ProcessStat currentUsage {};
         get_usage(stat.PID, &currentUsage);
 
         double ucpu, scpu;
 
         calc_cpu_usage_pct(&currentUsage, &stat, &ucpu, &scpu);
-        process.cpuUsage = std::max(ucpu, scpu);
-
-        newProcessList.emplace_back(process);
+        process->cpuUsage = std::max(ucpu, scpu);
     }
-
-    return newProcessList;
 }
 
 void processMemUsage(int pId, double& vm_usage, double& resident_set)
@@ -179,10 +168,11 @@ int main()
     using std::cout;
     using std::endl;
 
-    int totalMemKb = getTotalMemKb();
-    auto listOf = calcCpuUsage();
+    auto processList = ProcessDispatcher::getListOfProcesses();
+    calcCpuUsage(processList);
 
-    for (auto &process: listOf)
+    int totalMemKb = getTotalMemKb();
+    for (auto &process: processList)
     {
         double vm, rss;
 
@@ -194,11 +184,11 @@ int main()
     }
 
     // sort by cpu usage
-    std::sort(listOf.begin(), listOf.end(), [](const Process& a, const Process& b) {
+    std::sort(processList.begin(), processList.end(), [](const Process& a, const Process& b) {
         return a.cpuUsage > b.cpuUsage;
     });
 
-    for (const auto &process: listOf)
+    for (const auto &process: processList)
     {
         cout << process.PID << "| " << process.name << "| " << process.cpuUsage << "| " << std::fixed << process.memUsage << "%" << std::endl;
     }

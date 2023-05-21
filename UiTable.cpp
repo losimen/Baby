@@ -59,12 +59,6 @@ void UITable::drawTableData() {
 }
 
 
-std::string UITable::addLeadingZeros(const std::string& str, size_t n) {
-    size_t precision = n - std::min(n, str.size());
-    return std::string(precision, '0').append(str);
-}
-
-
 void UITable::sortData(int col, bool sortDirection) {
     if (col == 1)
     {
@@ -104,14 +98,26 @@ void UITable::sortData(int col, bool sortDirection) {
     }
 }
 
-void UITable::drawHeader(int col) {
+void UITable::drawHeader(int col, bool sortDirection) {
     int x = 1;
+    wclrtoeol(window);
+
     for (int i = 0; i < headers.size(); i++) {
         if (i == col)
-            wattron(window, A_REVERSE);
+        {
+            wattron(window, COLOR_PAIR(2));
 
-        mvwprintw(window, 1, x, "%s", headers[i].c_str());
-        wattroff(window, A_REVERSE);
+            if (sortDirection)
+                mvwprintw(window, 1, x, "%s ^", headers[i].c_str());
+            else
+                mvwprintw(window, 1, x, "%s v", headers[i].c_str());
+        }
+        else
+        {
+            mvwprintw(window, 1, x, "%s  ", headers[i].c_str());
+        }
+
+        wattroff(window, COLOR_PAIR(2));
         x += widths[i];
     }
 
@@ -125,8 +131,8 @@ UITable::UITable(const ProcessList &data) {
     noecho();
     start_color();
 
-    init_pair(1, COLOR_RED, COLOR_BLACK);
-    init_pair(2, COLOR_GREEN, COLOR_BLACK);
+    init_pair(1, COLOR_BLACK, COLOR_CYAN);
+    init_pair(2, COLOR_BLACK, COLOR_MAGENTA);
 
     keypad(window, TRUE);
 
@@ -135,7 +141,7 @@ UITable::UITable(const ProcessList &data) {
 }
 
 void UITable::drawTable() {
-    this->drawHeader(-1);
+    this->drawHeader();
     this->drawTableData();
 
     refresh();
@@ -168,7 +174,7 @@ void UITable::waitForInput() {
         }
 
         this->drawTableData();
-        this->drawHeader(col-1);
+        this->drawHeader(col-1, sortDirections[col]);
 
         wrefresh(window);
     }

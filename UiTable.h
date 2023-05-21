@@ -26,11 +26,9 @@ private:
     std::vector<std::string> headers = {"PID", "Name", "CPU %", "Mem %"};
     std::vector<int> widths = {10, 15, 10, 7};
 
-    static std::string addLeadingZeros(const std::string& str, size_t n);
-
     void drawTableData();
 
-    void drawHeader(int col);
+    void drawHeader(int col = -1, bool sortDirection = false);
 
     void sortData(int col, bool sortDirection);
 public:

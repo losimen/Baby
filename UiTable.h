@@ -20,12 +20,13 @@ class UITable
 private:
     ProcessList data;
     int startOffset = 0;
+    int currentRow = 0;
 
     WINDOW *window = nullptr;
     std::vector<std::string> headers = {"PID", "Name", "CPU %", "Mem %"};
     std::vector<int> widths = {10, 15, 10, 7};
 
-    std::string addLeadingZeros(std::string str, size_t n);
+    static std::string addLeadingZeros(const std::string& str, size_t n);
 
     void drawTableData();
 

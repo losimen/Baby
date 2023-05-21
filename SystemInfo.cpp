@@ -82,7 +82,6 @@ Process SystemInfo::getProcessInfo(const int PID) {
 
     process.PID = PID;
     process.name = SystemInfo::getProcessName(process.PID);
-    process.cpuUsage = 0;
 
     return process;
 }
@@ -97,7 +96,7 @@ std::string SystemInfo::getProcessName(const int PID)
     FILE *procStatFile = fopen(filePath.c_str(), "r");
 
     if (procStatFile == nullptr)
-        throw std::runtime_error("Process doesn't exist");
+        return "None";
 
     while(fgets(buffer, BUFFER_SIZE, procStatFile)) {
         if (charStartsWith(buffer, "Name"))

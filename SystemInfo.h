@@ -38,6 +38,9 @@ private:
     void calcCpuUsage();
     void calcMemUsage();
 
+    std::string getProcessName(const int PID);
+    Process getProcessInfo(const int PID);
+
     static const std::string PROC_DIR;
     static const std::string PROC_STAT_FILE;
     static const std::string PROC_STATUS_FILE;
@@ -45,8 +48,6 @@ private:
 public:
     ProcessList &getListOfProcesses();
 
-    Process getProcessInfo(const int PID);
-    std::string getProcessName(const int PID);
     bool isProcessExists(const int PID);
     bool killProcess(const int PID);
 };

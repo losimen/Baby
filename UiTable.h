@@ -19,6 +19,9 @@ class UITable
 {
 private:
     ProcessList data;
+    double cpuLoad;
+    double memUsage;
+
     int startOffset = 0;
     int currentRow = 0;
 
@@ -30,7 +33,7 @@ private:
 
     std::string getBar(double cpuLoad);
 
-    void drawHeader(int col = -1, bool sortDirection = false);
+    void drawHeader(int col, bool sortDirection);
 
     void sortData(int col, bool sortDirection);
 public:

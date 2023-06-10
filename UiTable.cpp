@@ -99,16 +99,13 @@ void UITable::sortData(int col, bool sortDirection) {
     }
 }
 
+
 void UITable::drawHeader(int col, bool sortDirection) {
     int x = 1;
     wclrtoeol(window);
 
-    double cpuLoad = SystemInfo::getCpuLoad(100000);
-    MemoryStatus memStatus;
-    SystemInfo::getMemStatus(memStatus);
-
     std::string cpuRow = "CPU " + getBar(cpuLoad) + " " + std::to_string(cpuLoad).substr(0, 4) + "%";
-    std::string memRow = "MEM " + getBar(memStatus.memUsage) + " " + std::to_string(memStatus.memUsage).substr(0, 4) + "%";
+    std::string memRow = "MEM " + getBar(memUsage) + " " + std::to_string(memUsage).substr(0, 4) + "%";
 
     mvwprintw(window, 0, x, "%s", cpuRow.c_str());
     mvwprintw(window, 1, x, "%s", memRow.c_str());
@@ -147,9 +144,15 @@ UITable::UITable() {
 
     keypad(window, TRUE);
 
+    cpuLoad = SystemInfo::getCpuLoad(100000);
+    MemoryStatus memStatus;
+    SystemInfo::getMemStatus(memStatus);
+    memUsage = memStatus.memUsage;
+
     this->data = SystemInfo::getListOfProcesses();
     this->window = newwin((int)data.size() + 3, std::accumulate(widths.begin(), widths.end(), 1) + 1, 1, 1);
 }
+
 
 void UITable::drawTable() {
     this->drawHeader(-1, false);
@@ -158,6 +161,7 @@ void UITable::drawTable() {
     refresh();
     wrefresh(window);
 }
+
 
 void UITable::waitForInput() {
     std::vector<bool> sortDirections(headers.size(), false);
@@ -190,6 +194,7 @@ void UITable::waitForInput() {
         wrefresh(window);
     }
 }
+
 
 UITable::~UITable() {
     endwin();

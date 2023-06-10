@@ -137,7 +137,7 @@ void UITable::drawHeader(int col, bool sortDirection) {
 }
 
 
-UITable::UITable(const ProcessList &data) {
+UITable::UITable() {
     initscr();
     noecho();
     start_color();
@@ -147,7 +147,7 @@ UITable::UITable(const ProcessList &data) {
 
     keypad(window, TRUE);
 
-    this->data = data;
+    this->data = SystemInfo::getListOfProcesses();
     this->window = newwin((int)data.size() + 3, std::accumulate(widths.begin(), widths.end(), 1) + 1, 1, 1);
 }
 

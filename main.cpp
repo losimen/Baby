@@ -36,15 +36,7 @@ void readProcessListFromFile(ProcessList &processList)
 
 int main()
 {
-    using std::cout;
-    using std::endl;
-
-    SystemInfo systemInfo;
-    ProcessList processList;
-
-    processList = systemInfo.getListOfProcesses();
-
-    UITable table(processList);
+    UITable table;
     table.drawTable();
     table.waitForInput();
 

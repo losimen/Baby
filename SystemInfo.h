@@ -53,22 +53,19 @@ inline T convert_unit( T num, int to, int from = BYTES)
 
 class SystemInfo {
 private:
-    ProcessList processList;
-
     static bool charStartsWith(const char *a, const char *b);
     static std::string parseProcessFileLine(std::string lineToParse);
 
-    int getUsage(const pid_t pid, struct ProcessStat* result);
-    void calcCpuUsagePct(const struct ProcessStat* cur_usage,
+    static int getUsage(const pid_t pid, struct ProcessStat* result);
+    static void calcCpuUsagePct(const struct ProcessStat* cur_usage,
                          const struct ProcessStat* last_usage,
                          double* ucpu_usage, double* scpu_usage);
 
-    void processMemUsage(int pId, double& vm_usage, double& resident_set);
-    int getTotalMemKb();
+    static void processMemUsage(int pId, double& vm_usage, double& resident_set);
+    static int getTotalMemKb();
 
-
-    void calcCpuUsage();
-    void calcMemUsage();
+    static void calcCpuUsage(ProcessList &processList);
+    static void calcMemUsage(ProcessList &processList);
 
     static std::string getProcessName(const int PID);
     static Process getProcessInfo(const int PID);
@@ -78,7 +75,7 @@ private:
     static const std::string PROC_STATUS_FILE;
 
 public:
-    ProcessList &getListOfProcesses();
+    static ProcessList getListOfProcesses();
 
     static float getCpuLoad(unsigned cpu_usage_delay);
 

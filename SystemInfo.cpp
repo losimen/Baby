@@ -35,7 +35,8 @@ bool SystemInfo::isProcessExists(const int PID) {
 }
 
 
-ProcessList &SystemInfo::getListOfProcesses() {
+ProcessList SystemInfo::getListOfProcesses() {
+    ProcessList processList;
     struct dirent *entry;
     DIR *dir = opendir(PROC_DIR.c_str());
     processList.clear();
@@ -52,10 +53,10 @@ ProcessList &SystemInfo::getListOfProcesses() {
         }
     }
 
-    calcCpuUsage();
-    calcMemUsage();
+    calcCpuUsage(processList);
+    calcMemUsage(processList);
 
-    return this->processList;
+    return processList;
 }
 
 
@@ -119,7 +120,7 @@ bool SystemInfo::killProcess(const int PID) {
     return true;
 }
 
-void SystemInfo::calcCpuUsage() {
+void SystemInfo::calcCpuUsage(ProcessList &processList) {
     std::vector<ProcessStat> usageStat;
     for (auto &process: processList)
     {
@@ -267,7 +268,7 @@ int SystemInfo::getTotalMemKb() {
     return totalMemKb;
 }
 
-void SystemInfo::calcMemUsage()
+void SystemInfo::calcMemUsage(ProcessList &processList)
 {
     int totalMemKb = getTotalMemKb();
     for (auto &process: processList)

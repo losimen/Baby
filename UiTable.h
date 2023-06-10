@@ -34,7 +34,7 @@ private:
 
     void sortData(int col, bool sortDirection);
 public:
-    explicit UITable(const ProcessList &data);
+    explicit UITable();
 
     void drawTable();
     void waitForInput();

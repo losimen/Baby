@@ -102,19 +102,26 @@ void UITable::drawHeader(int col, bool sortDirection) {
     int x = 1;
     wclrtoeol(window);
 
+    // Відображення текстового поля "CPU"
+    mvwprintw(window, 0, x, "CPU 50");
+
+    // Відображення текстового поля "MEM"
+    mvwprintw(window, 1, x, "MEM 50");
+
+    mvwhline(window, 2, 1, '-', getmaxx(window) - 2);
+
+    x = 1;  // Скидаємо значення x для початку відображення заголовків стовпців
+
     for (int i = 0; i < headers.size(); i++) {
-        if (i == col)
-        {
+        if (i == col) {
             wattron(window, COLOR_PAIR(2));
 
             if (sortDirection)
-                mvwprintw(window, 1, x, "%s ^", headers[i].c_str());
+                mvwprintw(window, 3, x, "%s ^", headers[i].c_str());
             else
-                mvwprintw(window, 1, x, "%s v", headers[i].c_str());
-        }
-        else
-        {
-            mvwprintw(window, 1, x, "%s  ", headers[i].c_str());
+                mvwprintw(window, 3, x, "%s v", headers[i].c_str());
+        } else {
+            mvwprintw(window, 3, x, "%s  ", headers[i].c_str());
         }
 
         wattroff(window, COLOR_PAIR(2));
@@ -122,8 +129,9 @@ void UITable::drawHeader(int col, bool sortDirection) {
     }
 
     // Redraw the horizontal line under the header
-    mvwhline(window, 2, 1, '-', getmaxx(window) - 2);
+    mvwhline(window, 4, 1, '-', getmaxx(window) - 2);
 }
+
 
 UITable::UITable(const ProcessList &data) {
     initscr();
@@ -141,7 +149,7 @@ UITable::UITable(const ProcessList &data) {
 }
 
 void UITable::drawTable() {
-    this->drawHeader();
+    this->drawHeader(-1, false);  // Додайте виклик drawHeader() для відображення заголовків
     this->drawTableData();
 
     refresh();

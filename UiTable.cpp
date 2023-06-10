@@ -104,11 +104,14 @@ void UITable::drawHeader(int col, bool sortDirection) {
     wclrtoeol(window);
 
     double cpuLoad = SystemInfo::getCpuLoad(100000);
+    MemoryStatus memStatus;
+    SystemInfo::getMemStatus(memStatus);
 
     std::string cpuRow = "CPU " + getBar(cpuLoad) + " " + std::to_string(cpuLoad).substr(0, 4) + "%";
+    std::string memRow = "MEM " + getBar(memStatus.memUsage) + " " + std::to_string(memStatus.memUsage).substr(0, 4) + "%";
 
     mvwprintw(window, 0, x, "%s", cpuRow.c_str());
-    mvwprintw(window, 1, x, "MEM 50");
+    mvwprintw(window, 1, x, "%s", memRow.c_str());
 
     mvwhline(window, 2, 1, '-', getmaxx(window) - 2);
 
@@ -136,7 +139,6 @@ void UITable::drawHeader(int col, bool sortDirection) {
 
 UITable::UITable(const ProcessList &data) {
     initscr();
-    mousemask(ALL_MOUSE_EVENTS, nullptr);
     noecho();
     start_color();
 

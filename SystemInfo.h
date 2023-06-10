@@ -25,6 +25,31 @@
 #define CP_IDLE 3
 #define CP_STATES 4
 
+enum BYTE_UNITS
+{
+    BYTES = 0,
+    KILOBYTES = 1,
+    MEGABYTES = 2,
+    GIGABYTES = 3
+};
+
+struct MemoryStatus
+{
+    float usedMem;
+    float totalMem;
+    float memUsage;
+};
+
+template <class T>
+inline T convert_unit( T num, int to, int from = BYTES)
+{
+    for( ; from < to; from++)
+    {
+        num /= 1024;
+    }
+    return num;
+}
+
 
 class SystemInfo {
 private:
@@ -56,6 +81,8 @@ public:
     ProcessList &getListOfProcesses();
 
     static float getCpuLoad(unsigned cpu_usage_delay);
+
+    static void getMemStatus(MemoryStatus & status);
 
     static bool isProcessExists(const int PID);
     static bool killProcess(const int PID);

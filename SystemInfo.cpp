@@ -323,3 +323,47 @@ float SystemInfo::getCpuLoad(unsigned int cpu_usage_delay)
            ) * 100.0;
 }
 
+void SystemInfo::getMemStatus(MemoryStatus &status)
+{
+    std::string line;
+    std::string substr;
+    size_t substr_start;
+    size_t substr_len;
+
+    unsigned int total_mem;
+    unsigned int used_mem;
+
+    std::ifstream memory_info("/proc/meminfo");
+
+    while( std::getline( memory_info, line ) )
+    {
+        substr_start = 0;
+        substr_len = line.find_first_of( ':' );
+        substr = line.substr( substr_start, substr_len );
+        substr_start = line.find_first_not_of( " ", substr_len + 1 );
+        substr_len = line.find_first_of( 'k' ) - substr_start;
+        if( substr.compare( "MemTotal" ) == 0 )
+        {
+            // get total memory
+            total_mem = stoi( line.substr( substr_start, substr_len ) );
+        }
+        else if( substr.compare( "MemFree" ) == 0 )
+        {
+            used_mem = total_mem - stoi( line.substr( substr_start, substr_len ) );
+        }
+        else if( substr.compare( "Shmem" ) == 0 )
+        {
+            used_mem += stoi( line.substr( substr_start, substr_len ) );
+        }
+        else if( substr.compare( "Buffers" ) == 0 ||
+                 substr.compare( "Cached" ) == 0  ||
+                 substr.compare( "SReclaimable" ) == 0 )
+        {
+            used_mem -= stoi( line.substr( substr_start, substr_len ) );
+        }
+    }
+
+    status.usedMem = convert_unit(static_cast< float >( used_mem ), MEGABYTES, KILOBYTES);
+    status.totalMem = convert_unit(static_cast< float >( total_mem ), MEGABYTES, KILOBYTES);
+    status.memUsage = (status.usedMem / status.totalMem) * 100.0;
+}

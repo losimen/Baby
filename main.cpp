@@ -4,18 +4,18 @@
 #include "SystemInfo.h"
 #include "UiTable.h"
 
-//
-//void writeProcessListToFile(ProcessList &processList)
-//{
-//    std::ofstream file;
-//    file.open("processes.txt");
-//
-//    for (auto &process : processList) {
-//        file << process.PID << " " << process.name << " " << process.cpuUsage << " " << process.memUsage << std::endl;
-//    }
-//
-//    file.close();
-//}
+
+void writeProcessListToFile(ProcessList &processList)
+{
+    std::ofstream file;
+    file.open("processes.txt");
+
+    for (auto &process : processList) {
+        file << process.PID << " " << process.name << " " << process.cpuUsage << " " << process.memUsage << std::endl;
+    }
+
+    file.close();
+}
 
 void readProcessListFromFile(ProcessList &processList)
 {
@@ -42,14 +42,7 @@ int main()
     SystemInfo systemInfo;
     ProcessList processList;
 
-    readProcessListFromFile(processList);
-
-    //    std::sort(processList.begin(), processList.end(), [](const Process& a, const Process& b) {
-//        return a.cpuUsage > b.cpuUsage;
-//    });
-//    std::cout << "Process list len = " << processList.size() << std::endl;
-
-
+    processList = systemInfo.getListOfProcesses();
 
     UITable table(processList);
     table.drawTable();

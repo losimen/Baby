@@ -3,9 +3,10 @@
 //
 
 #include "UiTable.h"
+#include "SystemInfo.h"
 
 void UITable::drawTableData() {
-    int maxRows = LINES - 3;
+    int maxRows = LINES - 5;
     int dataSize = static_cast<int>(data.size());
     int endRow = startOffset + maxRows - 1;
 
@@ -34,7 +35,7 @@ void UITable::drawTableData() {
     }
 
     for (int i = startOffset; i <= endRow; i++) {
-        wmove(window, i - startOffset + 3, 1);
+        wmove(window, i - startOffset + 5, 1);
         wclrtoeol(window);
 
         if (i == currentRow)
@@ -42,16 +43,16 @@ void UITable::drawTableData() {
 
         int x = 1;
 
-        mvwprintw(window, i - startOffset + 3, x, "%s", std::to_string(data[i].PID).c_str());
+        mvwprintw(window, i - startOffset + 5, x, "%s", std::to_string(data[i].PID).c_str());
         x += widths[0];
 
-        mvwprintw(window, i - startOffset + 3, x, "%s", data[i].name.substr(0, widths[1]).c_str());
+        mvwprintw(window, i - startOffset + 5, x, "%s", data[i].name.substr(0, widths[1]).c_str());
         x += widths[1];
 
-        mvwprintw(window, i - startOffset + 3, x, "%s", std::to_string(data[i].cpuUsage).c_str());
+        mvwprintw(window, i - startOffset + 5, x, "%s", std::to_string(data[i].cpuUsage).c_str());
         x += widths[2];
 
-        mvwprintw(window, i - startOffset + 3, x, "%s", std::to_string(data[i].memUsage).c_str());
+        mvwprintw(window, i - startOffset + 5, x, "%s", std::to_string(data[i].memUsage).c_str());
 
         if (i == currentRow)
             wattroff(window, COLOR_PAIR(1));
@@ -102,15 +103,16 @@ void UITable::drawHeader(int col, bool sortDirection) {
     int x = 1;
     wclrtoeol(window);
 
-    // Відображення текстового поля "CPU"
-    mvwprintw(window, 0, x, "CPU 50");
+    double cpuLoad = SystemInfo::getCpuLoad(100000);
 
-    // Відображення текстового поля "MEM"
+    std::string cpuRow = "CPU " + getBar(cpuLoad) + " " + std::to_string(cpuLoad).substr(0, 4) + "%";
+
+    mvwprintw(window, 0, x, "%s", cpuRow.c_str());
     mvwprintw(window, 1, x, "MEM 50");
 
     mvwhline(window, 2, 1, '-', getmaxx(window) - 2);
 
-    x = 1;  // Скидаємо значення x для початку відображення заголовків стовпців
+    x = 1;
 
     for (int i = 0; i < headers.size(); i++) {
         if (i == col) {
@@ -128,7 +130,6 @@ void UITable::drawHeader(int col, bool sortDirection) {
         x += widths[i];
     }
 
-    // Redraw the horizontal line under the header
     mvwhline(window, 4, 1, '-', getmaxx(window) - 2);
 }
 
@@ -149,7 +150,7 @@ UITable::UITable(const ProcessList &data) {
 }
 
 void UITable::drawTable() {
-    this->drawHeader(-1, false);  // Додайте виклик drawHeader() для відображення заголовків
+    this->drawHeader(-1, false);
     this->drawTableData();
 
     refresh();
@@ -191,4 +192,22 @@ void UITable::waitForInput() {
 UITable::~UITable() {
     endwin();
     delwin(window);
+}
+
+
+std::string UITable::getBar(double cpuLoad)
+{
+    const int maxBars = 10;
+    const double maxLoad = 100.0;
+    double barCount = (cpuLoad / maxLoad) * maxBars;
+
+    std::string bar;
+    for (int i = 0; i < maxBars; ++i)
+    {
+        if (i < barCount)
+            bar += "|";
+        else
+            bar += " ";
+    }
+    return bar;
 }

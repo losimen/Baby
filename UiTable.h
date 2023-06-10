@@ -28,6 +28,8 @@ private:
 
     void drawTableData();
 
+    std::string getBar(double cpuLoad);
+
     void drawHeader(int col = -1, bool sortDirection = false);
 
     void sortData(int col, bool sortDirection);

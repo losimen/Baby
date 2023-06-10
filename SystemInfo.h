@@ -19,6 +19,12 @@
 
 #include "Types.h"
 
+#define CP_USER   0
+#define CP_NICE   1
+#define CP_SYS    2
+#define CP_IDLE 3
+#define CP_STATES 4
+
 
 class SystemInfo {
 private:
@@ -35,11 +41,12 @@ private:
     void processMemUsage(int pId, double& vm_usage, double& resident_set);
     int getTotalMemKb();
 
+
     void calcCpuUsage();
     void calcMemUsage();
 
-    std::string getProcessName(const int PID);
-    Process getProcessInfo(const int PID);
+    static std::string getProcessName(const int PID);
+    static Process getProcessInfo(const int PID);
 
     static const std::string PROC_DIR;
     static const std::string PROC_STAT_FILE;
@@ -48,8 +55,10 @@ private:
 public:
     ProcessList &getListOfProcesses();
 
-    bool isProcessExists(const int PID);
-    bool killProcess(const int PID);
+    static float getCpuLoad(unsigned cpu_usage_delay);
+
+    static bool isProcessExists(const int PID);
+    static bool killProcess(const int PID);
 };
 
 #endif //PROCESS_DISPATCHER_H

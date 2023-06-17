@@ -104,7 +104,8 @@ std::string SystemInfo::getProcessName(const int PID)
 
 
 bool SystemInfo::killProcess(const int PID) {
-    if (!SystemInfo::isProcessExists(PID)) {
+    if (!SystemInfo::isProcessExists(PID))
+    {
         return false;
     }
 

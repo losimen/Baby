@@ -180,12 +180,19 @@ void UITable::waitForInput() {
         {
             currentRow--;
         }
-        else if (ch == 'd')
+
+        if (ch == 'd')
         {
             currentRow++;
         }
 
-        // refreshWindow();
+        if (ch == 'k')
+        {
+            bool status = SystemInfo::killProcess(data[currentRow].PID);
+            Logger::log("Killing process with PID: " + std::to_string(data[currentRow].PID) + " status: " + std::to_string(status));
+        }
+
+         refreshWindow();
     }
 
     dataThread.join();
@@ -230,7 +237,7 @@ void UITable::updateTableDataThread() {
     while (true) {
         this->updateTableData();
         refreshWindow();
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 }
 

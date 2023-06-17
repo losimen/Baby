@@ -15,6 +15,7 @@
 #include <thread>
 
 #include "Types.h"
+#include "Logger.h"
 
 
 class UITable

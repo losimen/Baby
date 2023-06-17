@@ -178,7 +178,6 @@ void UITable::waitForInput() {
         if (col >= 1 && col < 9)
         {
             sortDirections[col] = !sortDirections[col];
-            this->sortData(col, sortDirections[col]);
             startOffset = 0;
             currentRow = 0;
         }

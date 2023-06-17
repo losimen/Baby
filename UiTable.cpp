@@ -25,7 +25,7 @@ void UITable::drawTableData() {
     }
 
     if (currentRow < startOffset) {
-        startOffset = currentRow;
+        startOffset = currentRow.load();
         endRow = startOffset + maxRows - 1;
     }
 
@@ -100,22 +100,29 @@ void UITable::sortData(int col, bool sortDirection) {
 }
 
 
-void UITable::drawHeader(int col, bool sortDirection) {
-    int x = 1;
+void UITable::drawHeader() {
+    bool sortDirection = sortDirections[col];
+
+    int innerCol = col-1;
+    if (innerCol > 0)
+    {
+        innerCol = col-1;
+    }
+
     wclrtoeol(window);
 
     std::string cpuRow = "CPU " + getBar(cpuLoad) + " " + std::to_string(cpuLoad).substr(0, 4) + "%";
     std::string memRow = "MEM " + getBar(memUsage) + " " + std::to_string(memUsage).substr(0, 4) + "%";
 
+    int x = 1;
     mvwprintw(window, 0, x, "%s", cpuRow.c_str());
     mvwprintw(window, 1, x, "%s", memRow.c_str());
 
     mvwhline(window, 2, 1, '-', getmaxx(window) - 2);
 
     x = 1;
-
     for (int i = 0; i < headers.size(); i++) {
-        if (i == col) {
+        if (i == innerCol) {
             wattron(window, COLOR_PAIR(2));
 
             if (sortDirection)
@@ -144,6 +151,8 @@ UITable::UITable() {
 
     keypad(window, TRUE);
 
+    sortDirections = std::vector<bool>(headers.size(), false);
+
     cpuLoad = SystemInfo::getCpuLoad(100000);
     MemoryStatus memStatus;
     SystemInfo::getMemStatus(memStatus);
@@ -155,7 +164,7 @@ UITable::UITable() {
 
 
 void UITable::drawTable() {
-    this->drawHeader(-1, false);
+    this->drawHeader();
     this->drawTableData();
 
     refresh();
@@ -164,11 +173,10 @@ void UITable::drawTable() {
 
 
 void UITable::waitForInput() {
-    std::vector<bool> sortDirections(headers.size(), false);
     int ch;
 
     while ((ch = getch()) != 'q') {
-        int col = ch - '0';
+        col = ch - '0';
         if (col >= 1 && col < 9)
         {
             sortDirections[col] = !sortDirections[col];
@@ -189,7 +197,7 @@ void UITable::waitForInput() {
         }
 
         this->drawTableData();
-        this->drawHeader(col-1, sortDirections[col]);
+        this->drawHeader();
 
         wrefresh(window);
     }

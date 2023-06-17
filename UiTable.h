@@ -11,6 +11,7 @@
 #include <string>
 #include <numeric>
 #include <iostream>
+#include <atomic>
 
 #include "Types.h"
 
@@ -19,11 +20,14 @@ class UITable
 {
 private:
     ProcessList data;
-    double cpuLoad;
-    double memUsage;
+    std::atomic<double> cpuLoad;
+    std::atomic<double> memUsage;
 
-    int startOffset = 0;
-    int currentRow = 0;
+    std::atomic<int> startOffset = 0;
+    std::atomic<int> currentRow = 0;
+
+    std::atomic<int> col = -1;
+    std::vector<bool> sortDirections;
 
     WINDOW *window = nullptr;
     std::vector<std::string> headers = {"PID", "Name", "CPU %", "Mem %"};
@@ -33,7 +37,7 @@ private:
 
     std::string getBar(double cpuLoad);
 
-    void drawHeader(int col, bool sortDirection);
+    void drawHeader();
 
     void sortData(int col, bool sortDirection);
 public:

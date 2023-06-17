@@ -12,6 +12,7 @@
 #include <numeric>
 #include <iostream>
 #include <atomic>
+#include <thread>
 
 #include "Types.h"
 
@@ -19,6 +20,8 @@
 class UITable
 {
 private:
+    std::thread dataThread;
+
     ProcessList data;
     std::atomic<double> cpuLoad;
     std::atomic<double> memUsage;
@@ -34,6 +37,8 @@ private:
     std::vector<int> widths = {10, 15, 10, 7};
 
     void drawTableData();
+    void updateTableData();
+    void updateTableDataThread();
 
     std::string getBar(double cpuLoad);
 

@@ -153,12 +153,10 @@ UITable::UITable() {
 
     sortDirections = std::vector<bool>(headers.size(), false);
 
-    cpuLoad = SystemInfo::getCpuLoad(100000);
-    MemoryStatus memStatus;
-    SystemInfo::getMemStatus(memStatus);
-    memUsage = memStatus.memUsage;
+    dataThread = std::thread(&UITable::updateTableDataThread, this);
 
-    this->data = SystemInfo::getListOfProcesses();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
     this->window = newwin((int)data.size() + 3, std::accumulate(widths.begin(), widths.end(), 1) + 1, 1, 1);
 }
 
@@ -201,6 +199,8 @@ void UITable::waitForInput() {
 
         wrefresh(window);
     }
+
+    dataThread.join();
 }
 
 
@@ -225,4 +225,22 @@ std::string UITable::getBar(double cpuLoad)
             bar += " ";
     }
     return bar;
+}
+
+
+void UITable::updateTableData() {
+    cpuLoad = SystemInfo::getCpuLoad(100000);
+    MemoryStatus memStatus;
+    SystemInfo::getMemStatus(memStatus);
+    memUsage = memStatus.memUsage;
+
+    this->data = SystemInfo::getListOfProcesses();
+}
+
+
+void UITable::updateTableDataThread() {
+    while (true) {
+        this->updateTableData();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
 }

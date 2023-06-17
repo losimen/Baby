@@ -234,6 +234,7 @@ void UITable::updateTableData() {
 
 
 void UITable::updateTableDataThread() {
+    Logger::log("Starting data thread");
     while (true) {
         this->updateTableData();
         refreshWindow();

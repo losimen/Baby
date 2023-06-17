@@ -194,10 +194,7 @@ void UITable::waitForInput() {
             col = -1;
         }
 
-        this->drawTableData();
-        this->drawHeader();
-
-        wrefresh(window);
+        refreshWindow();
     }
 
     dataThread.join();
@@ -241,6 +238,14 @@ void UITable::updateTableData() {
 void UITable::updateTableDataThread() {
     while (true) {
         this->updateTableData();
+        refreshWindow();
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
+}
+
+void UITable::refreshWindow() {
+    this->drawTableData();
+    this->drawHeader();
+
+    wrefresh(window);
 }

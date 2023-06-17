@@ -39,6 +39,7 @@ private:
     void drawTableData();
     void updateTableData();
     void updateTableDataThread();
+    void refreshWindow();
 
     std::string getBar(double cpuLoad);
 

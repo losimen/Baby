@@ -31,10 +31,11 @@ private:
 
     std::atomic<int> col = -1;
     std::vector<bool> sortDirections;
+    std::atomic<int> sortCol = -1;
 
     WINDOW *window = nullptr;
     std::vector<std::string> headers = {"PID", "Name", "CPU %", "Mem %"};
-    std::vector<int> widths = {10, 15, 10, 7};
+    std::vector<int> widths = {16, 15, 10, 7};
 
     void drawTableData();
     void updateTableData();

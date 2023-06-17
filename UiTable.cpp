@@ -101,18 +101,12 @@ void UITable::sortData(int col, bool sortDirection) {
 
 
 void UITable::drawHeader() {
-    bool sortDirection = sortDirections[col];
-
-    int innerCol = col-1;
-    if (innerCol > 0)
-    {
-        innerCol = col-1;
-    }
+    bool sortDirection = sortDirections[sortCol+1];
 
     wclrtoeol(window);
 
-    std::string cpuRow = "CPU " + getBar(cpuLoad) + " " + std::to_string(cpuLoad).substr(0, 4) + "%";
-    std::string memRow = "MEM " + getBar(memUsage) + " " + std::to_string(memUsage).substr(0, 4) + "%";
+    std::string cpuRow = "CPU " + getBar(cpuLoad) + " " + std::to_string(cpuLoad).substr(0, 3) + "%";
+    std::string memRow = "MEM " + getBar(memUsage) + " " + std::to_string(memUsage).substr(0, 3) + "%";
 
     int x = 1;
     mvwprintw(window, 0, x, "%s", cpuRow.c_str());
@@ -122,7 +116,7 @@ void UITable::drawHeader() {
 
     x = 1;
     for (int i = 0; i < headers.size(); i++) {
-        if (i == innerCol) {
+        if (i == sortCol) {
             wattron(window, COLOR_PAIR(2));
 
             if (sortDirection)
@@ -152,7 +146,6 @@ UITable::UITable() {
     keypad(window, TRUE);
 
     sortDirections = std::vector<bool>(headers.size(), false);
-
     dataThread = std::thread(&UITable::updateTableDataThread, this);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -177,6 +170,7 @@ void UITable::waitForInput() {
         col = ch - '0';
         if (col >= 1 && col < 9)
         {
+            sortCol = col-1;
             sortDirections[col] = !sortDirections[col];
             startOffset = 0;
             currentRow = 0;
@@ -185,12 +179,10 @@ void UITable::waitForInput() {
         if (ch == 'u')
         {
             currentRow--;
-            col = -1;
         }
         else if (ch == 'd')
         {
             currentRow++;
-            col = -1;
         }
 
         refreshWindow();
@@ -243,7 +235,7 @@ void UITable::updateTableDataThread() {
 }
 
 void UITable::refreshWindow() {
-    this->sortData(col, sortDirections[col]);
+    this->sortData(sortCol+1, sortDirections[sortCol+1]);
     this->drawTableData();
     this->drawHeader();
 

@@ -41,10 +41,6 @@ ProcessList SystemInfo::getListOfProcesses() {
     DIR *dir = opendir(PROC_DIR.c_str());
     processList.clear();
 
-    if (dir == NULL) {
-        throw std::runtime_error("Cannot get process list");
-    }
-
     while ((entry = readdir(dir)) != NULL) {
         int PID = atoi(entry->d_name);
         if (PID != 0) {
@@ -65,10 +61,6 @@ Process SystemInfo::getProcessInfo(const int PID) {
     Process process;
 
     std::ifstream procStatFile(filePath);
-
-    if (!procStatFile.is_open())
-        throw std::runtime_error("Process doesn't exist");
-
     std::string content( (std::istreambuf_iterator<char>(procStatFile) ),
                          (std::istreambuf_iterator<char>()) );
     std::string delimiter = " ";
@@ -160,7 +152,6 @@ int SystemInfo::getUsage(const pid_t pid, struct ProcessStat *result) {
 
     FILE *fpstat = fopen(stat_filepath, "r");
     if (fpstat == nullptr) {
-        perror("FOPEN ERROR ");
         return -1;
     }
 
@@ -180,7 +171,6 @@ int SystemInfo::getUsage(const pid_t pid, struct ProcessStat *result) {
     //read+calc cpu total time from /proc/stat
     FILE *fstat = fopen("/proc/stat", "r");
     if (fstat == nullptr) {
-        perror("FOPEN ERROR ");
         return -1;
     }
 

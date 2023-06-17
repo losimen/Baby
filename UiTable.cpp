@@ -239,11 +239,12 @@ void UITable::updateTableDataThread() {
     while (true) {
         this->updateTableData();
         refreshWindow();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }
 }
 
 void UITable::refreshWindow() {
+    this->sortData(col, sortDirections[col]);
     this->drawTableData();
     this->drawHeader();
 

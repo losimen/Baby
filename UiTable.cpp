@@ -168,7 +168,7 @@ void UITable::waitForInput() {
 
     while ((ch = getch()) != 'q') {
         col = ch - '0';
-        if (col >= 1 && col < 9)
+        if (col >= 0 && col < 9)
         {
             sortCol = col-1;
             sortDirections[col] = !sortDirections[col];
@@ -185,7 +185,7 @@ void UITable::waitForInput() {
             currentRow++;
         }
 
-        refreshWindow();
+        // refreshWindow();
     }
 
     dataThread.join();
@@ -230,7 +230,7 @@ void UITable::updateTableDataThread() {
     while (true) {
         this->updateTableData();
         refreshWindow();
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
 

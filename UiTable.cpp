@@ -154,18 +154,10 @@ UITable::UITable() {
 }
 
 
-void UITable::drawTable() {
-    this->drawHeader();
-    this->drawTableData();
-
-    refresh();
-    wrefresh(window);
-}
-
-
 void UITable::waitForInput() {
     int ch;
 
+    refreshWindow();
     while ((ch = getch()) != 'q') {
         col = ch - '0';
         if (col >= 0 && col < 9)

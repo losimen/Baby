@@ -36,7 +36,7 @@ private:
 
     WINDOW *window = nullptr;
     std::vector<std::string> headers = {"PID", "Name", "CPU %", "Mem %"};
-    std::vector<int> widths = {16, 15, 10, 10};
+    std::vector<int> widths = {16, 15, 10, 15};
 
     void drawTableData();
     void updateTableData();
@@ -51,7 +51,6 @@ private:
 public:
     explicit UITable();
 
-    void drawTable();
     void waitForInput();
 
     ~UITable();

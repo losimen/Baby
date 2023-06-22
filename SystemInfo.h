@@ -4,7 +4,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
-#include <signal.h>
+#include <csignal>
 #include <cstring>
 #include <dirent.h>
 #include <sys/types.h>
@@ -56,7 +56,7 @@ private:
     static bool charStartsWith(const char *a, const char *b);
     static std::string parseProcessFileLine(std::string lineToParse);
 
-    static int getUsage(const pid_t pid, struct ProcessStat* result);
+    static int getUsage(pid_t pid, struct ProcessStat* result);
     static void calcCpuUsagePct(const struct ProcessStat* cur_usage,
                          const struct ProcessStat* last_usage,
                          double* ucpu_usage, double* scpu_usage);
@@ -67,8 +67,8 @@ private:
     static void calcCpuUsage(ProcessList &processList);
     static void calcMemUsage(ProcessList &processList);
 
-    static std::string getProcessName(const int PID);
-    static Process getProcessInfo(const int PID);
+    static std::string getProcessName(int PID);
+    static Process getProcessInfo(int PID);
 
     static const std::string PROC_DIR;
     static const std::string PROC_STAT_FILE;
@@ -78,11 +78,8 @@ public:
     static ProcessList getListOfProcesses();
 
     static float getCpuLoad(unsigned cpu_usage_delay);
-
     static void getMemStatus(MemoryStatus & status);
-
-    static bool isProcessExists(const int PID);
-    static bool killProcess(const int PID);
+    static bool killProcess(int PID);
 };
 
 #endif //PROCESS_DISPATCHER_H

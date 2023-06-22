@@ -11,18 +11,9 @@
 struct Process {
     int PID;
     std::string name;
+
     double cpuUsage;
-
-    double vSize;
-    double rss;
     double memUsage;
-};
-
-struct TableInfo
-{
-    std::string firstName;
-    std::string lastName;
-    int age;
 };
 
 struct ProcessStat {
